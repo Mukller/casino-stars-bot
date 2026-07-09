@@ -1,0 +1,7 @@
+services:
+  casino-bot:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./winners.log:/app/winners.log
