@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 from aiogram import Bot, Dispatcher, F
-from aiogram.types import LabeledPrice, Message, PreCheckoutQuery
+from aiogram.types import Message
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -30,50 +30,28 @@ def log_winner(user_id: int, username: str) -> None:
         f.write(f"{ts} | id:{user_id} | @{username}\n")
 
 
-@dp.message(F.text == "/spin")
-async def cmd_spin(message: Message) -> None:
-    await bot.send_invoice(
-        chat_id=message.chat.id,
-        title="🎰 Казино",
-        description="Крутани слот-машину! Три семёрки = подарок 🎁",
-        payload=f"spin_{message.from_user.id}",
-        currency="XTR",
-        prices=[LabeledPrice(label="1 спин", amount=1)],
-    )
+@dp.message(F.dice.emoji == SLOT)
+async def handle_spin(message: Message) -> None:
+    if message.dice.value != JACKPOT:
+        return
 
-
-@dp.pre_checkout_query()
-async def pre_checkout(query: PreCheckoutQuery) -> None:
-    await query.answer(ok=True)
-
-
-@dp.message(F.successful_payment)
-async def handle_payment(message: Message) -> None:
-    dice_msg = await message.answer_dice(emoji=SLOT)
-    # ждём анимацию слот-машины
-    await asyncio.sleep(3)
-
-    value = dice_msg.dice.value
     user = message.from_user
     name = f"@{user.username}" if user.username else user.first_name
 
-    if value == JACKPOT:
-        try:
-            await bot.send_gift(user_id=user.id, gift_id=GIFT_ID)
-            await message.answer(f"🎰 JACKPOT! {name} выиграл подарок! 🎁")
-            log_winner(user.id, user.username or str(user.id))
-            logging.info(f"Gift sent to {user.id} ({name})")
-        except Exception as e:
-            logging.error(f"Failed to send gift to {user.id}: {e}")
-    else:
-        await message.answer(f"😢 Не повезло, {name}! Попробуй снова — /spin")
+    try:
+        await bot.send_gift(user_id=user.id, gift_id=GIFT_ID)
+        await message.answer(f"🎰 JACKPOT! {name} выиграл подарок! 🎁")
+        log_winner(user.id, user.username or str(user.id))
+        logging.info(f"Gift sent to {user.id} ({name})")
+    except Exception as e:
+        logging.error(f"Failed to send gift to {user.id}: {e}")
 
 
 @dp.message()
 async def handle_other(message: Message) -> None:
     if not message.from_user or message.from_user.is_bot:
         return
-    await message.reply("Напиши /spin чтобы сыграть! (стоит 1 ⭐)")
+    await message.reply("Отправь 🎰 чтобы сыграть! (стоит 1 ⭐)")
 
 
 async def main() -> None:
