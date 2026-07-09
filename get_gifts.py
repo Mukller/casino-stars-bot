@@ -1,22 +1,20 @@
 """Run once to find available gift IDs, then set GIFT_ID in .env"""
-import asyncio
 import os
+import urllib.request
+import json
 
-from aiogram import Bot
-from dotenv import load_dotenv
+token = os.getenv("BOT_TOKEN") or open(".env").read().split("BOT_TOKEN=")[1].split("\n")[0].strip()
+url = f"https://api.telegram.org/bot{token}/getAvailableGifts"
 
-load_dotenv()
+with urllib.request.urlopen(url) as r:
+    data = json.load(r)
 
+if not data.get("ok"):
+    print("Error:", data)
+    exit(1)
 
-async def main() -> None:
-    bot = Bot(token=os.getenv("BOT_TOKEN"))
-    gifts = await bot.get_available_gifts()
-    print(f"{'ID':<20} {'Stars':>6} {'Stock':>8}")
-    print("-" * 38)
-    for g in gifts.gifts:
-        stock = g.remaining_count if g.remaining_count is not None else "∞"
-        print(f"{g.id:<20} {g.star_count:>6} {str(stock):>8}")
-    await bot.session.close()
-
-
-asyncio.run(main())
+print(f"{'ID':<25} {'Stars':>6}  {'Stock':>8}")
+print("-" * 44)
+for g in data["result"]["gifts"]:
+    stock = str(g.get("remaining_count", "inf"))
+    print(f"{g['id']:<25} {g['star_count']:>6}  {stock:>8}")
