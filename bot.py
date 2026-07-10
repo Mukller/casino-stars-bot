@@ -3,6 +3,7 @@ import logging
 import os
 from datetime import datetime
 
+import aiohttp
 from aiogram import Bot, Dispatcher, F
 from aiogram.types import Message
 from dotenv import load_dotenv
@@ -30,6 +31,15 @@ def log_winner(user_id: int, username: str) -> None:
         f.write(f"{ts} | id:{user_id} | @{username}\n")
 
 
+async def send_gift(user_id: int, gift_id: str) -> None:
+    url = f"https://api.telegram.org/bot{TOKEN}/sendGift"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json={"user_id": user_id, "gift_id": gift_id}) as resp:
+            data = await resp.json()
+    if not data.get("ok"):
+        raise Exception(data.get("description", "sendGift failed"))
+
+
 @dp.message(F.dice.emoji == SLOT)
 async def handle_spin(message: Message) -> None:
     if message.dice.value != JACKPOT:
@@ -39,7 +49,7 @@ async def handle_spin(message: Message) -> None:
     name = f"@{user.username}" if user.username else user.first_name
 
     try:
-        await bot.send_gift(user_id=user.id, gift_id=GIFT_ID)
+        await send_gift(user.id, GIFT_ID)
         await message.answer(f"🎰 JACKPOT! {name} выиграл подарок! 🎁")
         log_winner(user.id, user.username or str(user.id))
         logging.info(f"Gift sent to {user.id} ({name})")
