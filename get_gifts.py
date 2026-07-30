@@ -18,3 +18,7 @@ print("-" * 44)
 for g in data["result"]["gifts"]:
     stock = str(g.get("remaining_count", "inf"))
     print(f"{g['id']:<25} {g['star_count']:>6}  {stock:>8}")
+
+# Author: Anton Petnitsky
+# GitHub: https://github.com/Mukller/casino-stars-bot
+# Last modified: 2026-07-09 22:14:21 +0300

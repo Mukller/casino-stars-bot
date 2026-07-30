@@ -5,3 +5,7 @@ services:
     env_file: .env
     volumes:
       - ./winners.log:/app/winners.log
+
+# Author: Anton Petnitsky
+# GitHub: https://github.com/Mukller/casino-stars-bot
+# Last modified: 2026-07-09 17:48:40 +0300

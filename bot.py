@@ -71,3 +71,7 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+# Author: Anton Petnitsky
+# GitHub: https://github.com/Mukller/casino-stars-bot
+# Last modified: 2026-07-10 22:01:20 +0300
